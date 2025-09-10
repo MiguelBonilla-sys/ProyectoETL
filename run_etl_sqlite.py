@@ -72,35 +72,82 @@ def main():
         print("\n📤 PASO 3: CARGA A SQLITE")
         print("-" * 30)
         
-        loader = Loader(
-            df=transformer.df,
-            drivers=drivers,
-            constructors=constructors,
-            qualifying_results=qualifying_results
-        )
+        # Configurar SQLite directamente
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from Models.base import BaseModel
+        from Models.driver import Driver
+        from Models.constructor import Constructor
+        from Models.qualifying import QualifyingResult
         
-        print("🔧 Creando tablas...")
-        stats = loader.to_database_orm()
+        # Eliminar base de datos anterior si existe
+        sqlite_db = "f1_orm.db"
+        if os.path.exists(sqlite_db):
+            os.remove(sqlite_db)
+            print("�️ Base de datos anterior eliminada")
         
-        if 'error' in stats:
-            print(f"❌ Error general en carga ORM: {stats['error']}")
-        else:
-            print("✅ Tablas creadas/verificadas")
+        # Engine SQLite
+        sqlite_url = f"sqlite:///{sqlite_db}"
+        engine = create_engine(sqlite_url, echo=False)
+        
+        # Crear tablas
+        BaseModel.metadata.create_all(engine)
+        print("✅ Tablas creadas/verificadas")
+        
+        # Sesión
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        
+        try:
             print("📋 Cargando datos...")
+            
+            # Cargar pilotos
+            driver_map = {}
+            for driver in drivers:
+                merged_driver = session.merge(driver)
+                driver_map[driver.driver_id] = merged_driver
+            
+            # Cargar constructores
+            constructor_map = {}
+            for constructor in constructors:
+                merged_constructor = session.merge(constructor)
+                constructor_map[constructor.constructor_id] = merged_constructor
+            
+            # Commit pilotos y constructores
+            session.commit()
+            
+            # Cargar resultados qualifying con relaciones correctas
+            for result in qualifying_results:
+                # Establecer relaciones usando los IDs guardados
+                driver_id = getattr(result, '_driver_id', None)
+                constructor_id = getattr(result, '_constructor_id', None)
+                
+                if driver_id in driver_map and constructor_id in constructor_map:
+                    result.driver_db_id = driver_map[driver_id].id
+                    result.constructor_db_id = constructor_map[constructor_id].id
+                    session.merge(result)
+            
+            session.commit()
+            session.close()
+            
             print("🎉 CARGA EXITOSA!")
             print("📊 Estadísticas:")
+            
+        except Exception as e:
+            session.rollback()
+            session.close()
+            print(f"❌ Error general en carga ORM: {e}")
+            return False
         
         # PASO 4: VERIFICACIÓN
         print("\n📋 PASO 4: VERIFICACIÓN")
         print("-" * 30)
         
-        # Verificar datos guardados
-        from Database import get_session
-        from Models.driver import Driver
-        from Models.constructor import Constructor
-        from Models.qualifying import QualifyingResult
+        # Verificar datos guardados usando la misma conexión SQLite
+        Session = sessionmaker(bind=engine)
+        session = Session()
         
-        with get_session() as session:
+        try:
             driver_count = session.query(Driver).count()
             constructor_count = session.query(Constructor).count()
             qualifying_count = session.query(QualifyingResult).count()
@@ -110,13 +157,30 @@ def main():
             print(f"   • Constructores: {constructor_count}")
             print(f"   • Resultados qualifying: {qualifying_count}")
             
+            # Ejemplos
+            sample_driver = session.query(Driver).first()
+            sample_constructor = session.query(Constructor).first()
+            sample_result = session.query(QualifyingResult).first()
+            
             print("\n📋 Ejemplos de datos:")
+            if sample_driver:
+                print(f"   👨‍🏎️ Piloto: {sample_driver.full_name} ({sample_driver.nationality})")
+            if sample_constructor:
+                print(f"   🏭 Constructor: {sample_constructor.name} ({sample_constructor.nationality})")
+            if sample_result:
+                print(f"   🏁 Resultado: Pos {sample_result.position} - Q1: {sample_result.q1}")
+                
+            session.close()
+            
+        except Exception as e:
+            print(f"❌ Error en verificación: {e}")
+            session.close()
         
         print("\n" + "=" * 70)
         print("🏆 ¡ETL COMPLETADO EXITOSAMENTE!")
         print("=" * 70)
         print("\n🎉 ¡Sistema ETL con SQLAlchemy funcionando perfectamente!")
-        print("💡 Archivo de base de datos: f1_orm.db")
+        print(f"💡 Archivo de base de datos: {sqlite_db}")
         
         return True
         
