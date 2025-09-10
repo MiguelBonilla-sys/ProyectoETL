@@ -284,25 +284,7 @@ Este proyecto está licenciado bajo la MIT License. Ver el archivo `LICENSE` par
 
 **Miguel Bonilla**
 - GitHub: [@MiguelBonilla-sys](https://github.com/MiguelBonilla-sys)
-- Proyecto: [ETLProject](https://github.com/MiguelBonilla-sys/ETLProject)
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el proyecto
-2. Crear una rama para la nueva característica (`git checkout -b feature/nueva-caracteristica`)
-3. Commit los cambios (`git commit -am 'Agregar nueva característica'`)
-4. Push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Crear un Pull Request
-
-## 📞 Soporte
-
-Si encuentras algún problema o tienes preguntas:
-
-1. Revisa la documentación
-2. Verifica los logs de error
-3. Crea un issue en GitHub con detalles del problema
+- Proyecto: [ETLProject](https://github.com/afmirandad/ETLProject) fuente de aprendizaje
 
 ---
 
