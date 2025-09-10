@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+"""
+ETL Project - Procesamiento de datos de qualifying de Fórmula 1
+=====================================================
+
+Este script principal ejecuta el pipeline completo ETL:
+1. Extract: Extrae datos del archivo CSV de qualifying
+2. Transform: Limpia y transforma los datos, generando códigos de pilotos
+3. Load: Carga los datos limpios a CSV y base de datos SQLite
+
+Autor: Miguel Bonilla
+Fecha: Septiembre 2025
+"""
 
 import sys
 import os
@@ -102,6 +115,11 @@ def main():
         loader.to_csv(csv_output)
         print_success(f"Archivo CSV guardado: {csv_output}")
         
+        # Cargar a SQLite
+        print_info("Guardando en base de datos SQLite...")
+        loader.to_sqlite()
+        print_success(f"Datos guardados en SQLite: {Config.SQLITE_DB_PATH}")
+        print_info(f"Tabla: {Config.SQLITE_TABLE}")
         
         # RESUMEN FINAL
         print("\n" + "=" * 60)
@@ -116,6 +134,7 @@ def main():
         
         print("\n📁 Archivos generados:")
         print(f"   • CSV: {csv_output}")
+        print(f"   • SQLite: {Config.SQLITE_DB_PATH}")
         
         print(f"\n⏱️  Completado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
@@ -128,6 +147,35 @@ def main():
         return False
 
 
+def show_data_sample():
+    """
+    Función auxiliar para mostrar una muestra de los datos procesados.
+    """
+    try:
+        print_banner()
+        print("📊 VISUALIZACIÓN DE DATOS PROCESADOS")
+        
+        # Cargar datos desde SQLite
+        import sqlite3
+        import pandas as pd
+        
+        conn = sqlite3.connect(Config.SQLITE_DB_PATH)
+        df = pd.read_sql_query(f"SELECT * FROM {Config.SQLITE_TABLE} LIMIT 20", conn)
+        conn.close()
+        
+        if not df.empty:
+            print(f"\nÚltimos datos en la base de datos ({len(df)} registros):")
+            print("-" * 60)
+            print(df.to_string())
+            
+            print("\nEstadísticas rápidas:")
+            print(f"• Temporadas: {df['Season'].unique()}")
+            print(f"• Constructores: {df['ConstructorName'].unique()}")
+        else:
+            print_info("No hay datos en la base de datos. Ejecuta el ETL primero.")
+            
+    except Exception as e:
+        print_error(f"Error al mostrar datos: {e}")
 
 
 if __name__ == "__main__":

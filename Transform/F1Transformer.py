@@ -1,3 +1,4 @@
+import pandas as pd
 class Transformer:
     """
     Clase para transformar y limpiar los datos extraídos.
@@ -9,7 +10,6 @@ class Transformer:
         """
         Realiza limpieza y transformación de los datos.
         """
-        import pandas as pd
         df = self.df.copy()
         # Limpieza de columnas de fecha y hora
         df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
@@ -41,7 +41,6 @@ class Transformer:
         Realiza limpieza específica para los datos de qualifying.
         Genera el campo 'Code' con las primeras 3 letras del 'FamilyName'.
         """
-        import pandas as pd
         df = self.df.copy()
         
         # Verificar si existe la columna FamilyName

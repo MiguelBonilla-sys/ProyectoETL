@@ -1,3 +1,5 @@
+import pandas as pd
+
 class Extractor:
     """
     Clase para extraer datos de archivos fuente.
@@ -9,7 +11,6 @@ class Extractor:
         """
         Extrae los datos del archivo especificado.
         """
-        import pandas as pd
         try:
             df = pd.read_csv(self.file_path)
             return df
@@ -21,7 +22,6 @@ class Extractor:
         """
         Extrae datos de un archivo CSV específico.
         """
-        import pandas as pd
         try:
             df = pd.read_csv(file_path)
             return df
